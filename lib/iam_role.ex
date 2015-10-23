@@ -24,5 +24,9 @@ defmodule IamRole do
     opts = [strategy: :one_for_one, name: IamRole.Supervisor]
     Supervisor.start_link(children, opts)
   end
+
+  def get_credentials() do
+    Application.get_env(:iam_role, :credentials)
+  end
   
 end

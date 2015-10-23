@@ -62,8 +62,12 @@ defmodule IamRole.Worker do
             # schedule credential refresh
             seconds = Utils.date_now_diff(credentials.expiration) - 180 # 3 minutes before
             Process.send_after(self, :refresh, seconds * 1000)
-                
-            state = %{state | credentials: credentials}            
+
+            # publish credentials to env
+            :ok = Application.put_env(:iam_role, :credentials,
+                                      {credentials.access_key_id, credentials.secret_access_key})
+            
+            state = %{state | credentials: credentials}     
         end
     end
     
