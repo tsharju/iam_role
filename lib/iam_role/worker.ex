@@ -12,9 +12,8 @@ defmodule IamRole.Worker do
   end
   
   def init([args]) do
-#    state = update(@initial_state)
-    #    {:ok, state}
-    {:ok, %{}}
+    state = update(@initial_state)
+    {:ok, state}
   end
 
   def handle_info(:refresh, state) do
@@ -24,7 +23,7 @@ defmodule IamRole.Worker do
 
   ## Internal API
   
-  defp update(%{info: info} = state) do
+  defp update(%{role_info: info} = state) do
     info_uri = "http://#{@metadata_host}/#{@metadata_version}/meta-data/iam/info/"
     |> String.to_char_list
 
@@ -47,7 +46,7 @@ defmodule IamRole.Worker do
     
     role_name = state.role_info.name
     credentials_uri = "http://#{@metadata_host}/#{@metadata_version}" <>
-      "/meta-data/iam/credentials/#{role_name}"
+      "/meta-data/iam/security-credentials/#{role_name}" |> String.to_char_list
     
     # load role credentials
     case http_request(credentials_uri) do
@@ -60,13 +59,13 @@ defmodule IamRole.Worker do
             # maybe retry
             :ok
           credentials ->
-            state = %{state | credentials: credentials}
+            # schedule credential refresh
+            seconds = Utils.date_now_diff(credentials.expiration) - 180 # 3 minutes before
+            Process.send_after(self, :refresh, seconds * 1000)
+                
+            state = %{state | credentials: credentials}            
         end
     end
-    
-    # schedule credential refresh
-    seconds = Utils.date_now_diff(state.credentials.expiration) - 180 # 3 minutes before
-    Process.send_after(self, :refresh, seconds * 1000)
     
     state
   end
