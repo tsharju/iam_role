@@ -25,6 +25,10 @@ defmodule IamRole do
     Supervisor.start_link(children, opts)
   end
 
+  def get_state() do
+    GenServer.call(IamRole.Worker, :get_state)
+  end
+  
   def get_credentials() do
     Application.get_env(:iam_role, :credentials)
   end
