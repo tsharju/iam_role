@@ -64,7 +64,7 @@ defmodule IamRoleUtilsTest do
   test "parse date" do
     date = Utils.date_now_diff("2015-10-23T13:47:29Z")
     
-    assert date > 0
+    assert is_integer(date)
   end
   
 end
